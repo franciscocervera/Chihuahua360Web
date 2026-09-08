@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#050813" />
+    <meta name="description" content="Experiencia WebXR 360 para explorar lugares representativos del estado de Chihuahua." />
+    <title>Chihuahua 360 | Recorrido inmersivo</title>
+  </head>
+  <body>
+    <div id="loading" class="loading visible">
+      <div class="brand-mark">360</div>
+      <h1>Chihuahua 360</h1>
+      <p>Cargando recorrido inmersivo por el Estado Grande</p>
+      <div class="loader-bar"><span></span></div>
+    </div>
+
+    <header id="hud" class="hud">
+      <section class="hud-card title-card">
+        <span id="scene-category" class="eyebrow">Inicio</span>
+        <h1 id="hud-title">Chihuahua 360</h1>
+        <p id="hud-subtitle">Explora naturaleza, historia y cultura del Estado Grande</p>
+      </section>
+      <nav class="hud-card actions-card" aria-label="Acciones principales">
+        <button id="enter-audio" class="ui-button primary">Activar audio</button>
+        <button id="vest-control" class="ui-button">Chaleco</button>
+        <button id="home-button" class="ui-button">Inicio</button>
+      </nav>
+    </header>
+
+    <aside id="scene-rail" class="scene-rail" aria-label="Destinos disponibles">
+      <div class="rail-head">
+        <span>Destinos</span>
+        <strong id="scene-count">10</strong>
+      </div>
+      <div id="scene-list" class="scene-list"></div>
+    </aside>
+
+    <section id="info-panel" class="info-panel hidden" aria-live="polite">
+      <button id="close-info" class="close-button" aria-label="Cerrar información">×</button>
+      <span class="eyebrow">Punto de interés</span>
+      <h2 id="info-title"></h2>
+      <p id="info-body"></p>
+    </section>
+
+    <section id="vest-panel" class="vest-panel hidden" aria-live="polite">
+      <button id="close-vest" class="close-button" aria-label="Cerrar control del chaleco">×</button>
+      <span class="eyebrow">Sistema háptico</span>
+      <h2>Control del chaleco</h2>
+      <p class="vest-device-row">
+        <strong id="vest-status" class="vest-status">Sin conexión</strong>
+        <span id="vest-device-name">Chaleco no conectado</span>
+      </p>
+
+      <article class="vest-card vest-connection-card">
+        <h3>Conexión</h3>
+        <label>
+          Método
+          <select id="vest-transport">
+            <option value="serial">USB · Web Serial</option>
+            <option value="bluetooth">Bluetooth BLE</option>
+          </select>
+        </label>
+        <p id="vest-transport-hint" class="vest-hint">Conexión directa mediante Web Serial.</p>
+        <div class="vest-actions">
+          <button id="vest-connect-selected" class="ui-button primary" type="button">Conectar por USB</button>
+        </div>
+      </article>
+
+      <p id="vest-message" class="vest-message">Sistema disponible para conexión.</p>
+
+      <div class="vest-grid">
+        <div class="vest-column">
+          <article class="vest-card vest-vibration-card">
+            <h3>Motores de vibración</h3>
+            <label>
+              Motor
+              <select id="vest-vibration-component"></select>
+            </label>
+            <label>
+              Duración
+              <span class="vest-input-row">
+                <input id="vest-duration" type="number" min="20" max="10000" step="20" value="600" />
+                <span>ms</span>
+              </span>
+            </label>
+            <div class="vest-actions">
+              <button id="vest-send-vibration" class="ui-button primary" type="button" data-vest-command>Activar</button>
+              <button id="vest-stop-vibration" class="ui-button" type="button" data-vest-command>Apagar</button>
+            </div>
+          </article>
+
+          <article class="vest-card vest-general-card">
+            <h3>Control general</h3>
+            <div class="vest-actions">
+              <button id="vest-send-all-vibration" class="ui-button" type="button" data-vest-command>Activar V1–V4</button>
+              <button id="vest-send-all-off" class="ui-button danger" type="button" data-vest-command>Apagar todas las salidas</button>
+            </div>
+          </article>
+        </div>
+
+        <article class="vest-card vest-thermal-card">
+          <h3>Sistema térmico</h3>
+          <label>
+            Celda
+            <select id="vest-thermal-component"></select>
+          </label>
+          <label>
+            Acción
+            <select id="vest-thermal-mode">
+              <option value="on">Activar</option>
+              <option value="off">Apagar</option>
+            </select>
+          </label>
+          <label>
+            Ciclo de trabajo <output id="vest-thermal-duty-value">50%</output>
+            <input id="vest-thermal-duty" type="range" min="1" max="70" value="50" />
+          </label>
+          <label>
+            Duración
+            <span class="vest-input-row">
+              <input id="vest-thermal-duration" type="number" min="250" max="10000" step="250" value="6000" />
+              <span>ms</span>
+            </span>
+          </label>
+          <div class="vest-actions">
+            <button id="vest-send-thermal" class="ui-button primary" type="button" data-vest-command>Aplicar</button>
+          </div>
+        </article>
+      </div>
+
+      <article class="vest-card vest-wide vest-console-card">
+        <div class="vest-console-header">
+          <h3>Consola de diagnóstico</h3>
+          <button id="vest-clear-log" class="vest-console-clear" type="button">Limpiar</button>
+        </div>
+        <pre id="vest-log" class="vest-log" aria-live="polite">Consola lista.</pre>
+      </article>
+    </section>
+
+    <div id="boot-error" class="boot-error">
+      <strong>No se pudo cargar la aplicación.</strong>
+    </div>
+
+    <script>
+      setTimeout(() => {
+        if (!window.__CHIHUAHUA_XR_READY__) {
+          document.getElementById('boot-error').style.display = 'block';
+        }
+      }, 3000);
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
